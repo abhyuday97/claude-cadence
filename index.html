@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Code — Operating Cadence</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1d212b; --line:#2a2f3a;
+    --ink:#e7eaf0; --mut:#9aa3b2; --acc:#6ea8fe; --good:#4ade80;
+    --warn:#fbbf24; --build:#f472b6; --enable:#a78bfa;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f7f9; --panel:#fff; --panel2:#f0f2f5; --line:#e2e5ea;
+      --ink:#1a1d24; --mut:#5a6372; --acc:#2563eb; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px}
+  header h1{font-size:24px;margin:0 0 4px;letter-spacing:-.4px}
+  header p{color:var(--mut);margin:0 0 4px}
+  .updated{font-size:12px;color:var(--mut)}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--mut);
+    margin:34px 0 12px;font-weight:600}
+  /* triage */
+  .triage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .triage p.lead{margin:0 0 14px;color:var(--mut)}
+  .qrow{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+  .qrow:first-of-type{border-top:none}
+  .qrow input{margin-top:3px;width:17px;height:17px;accent-color:var(--acc);cursor:pointer;flex:0 0 auto}
+  .qrow label{cursor:pointer}
+  .qrow .sig{display:block;font-size:12.5px;color:var(--mut)}
+  #out{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);min-height:24px}
+  #out .empty{color:var(--mut);font-size:13px}
+  .pill{display:inline-block;margin:4px 6px 0 0;padding:5px 11px;border-radius:999px;
+    background:var(--panel2);border:1px solid var(--line);font-size:13px;font-weight:600}
+  .pill code{color:var(--acc)}
+  /* cadence groups */
+  .grp{margin-top:8px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;margin:10px 0;display:grid;grid-template-columns:1fr auto;gap:6px 14px}
+  .card h3{margin:0;font-size:15px;display:flex;align-items:center;gap:8px}
+  .card .cmd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
+    background:var(--panel2);border:1px solid var(--line);padding:3px 8px;border-radius:7px;
+    color:var(--acc);white-space:nowrap;align-self:start}
+  .card .when{grid-column:1/-1;color:var(--mut);font-size:13.5px;margin-top:2px}
+  .tag{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+    padding:2px 7px;border-radius:6px;border:1px solid}
+  .t-ready{color:var(--good);border-color:var(--good)}
+  .t-enable{color:var(--enable);border-color:var(--enable)}
+  .t-build{color:var(--build);border-color:var(--build)}
+  .t-passive{color:var(--warn);border-color:var(--warn)}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--mut);margin:6px 0 0}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:9px;height:9px;border-radius:3px;display:inline-block}
+  /* snapshot */
+  .snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .stat b{display:block;font-size:22px;letter-spacing:-.5px}
+  .stat span{font-size:12.5px;color:var(--mut)}
+  .edge{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--acc);
+    border-radius:10px;padding:12px 15px;margin:10px 0;font-size:14px}
+  .edge b{color:var(--acc)}
+  footer{margin-top:40px;color:var(--mut);font-size:12.5px;text-align:center}
+  a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Claude Code — Operating Cadence</h1>
+    <p>When to trigger which skill, and how. Open this at the start or end of a session to decide what to run.</p>
+    <div class="updated" id="updated">Updated 2026-06-14</div>
+  </header>
+
+  <h2>1 · Session triage — check what's true, see what to run</h2>
+  <div class="triage">
+    <p class="lead">Tick every box that applies to the session you're in or just finished.</p>
+    <div class="qrow"><input type="checkbox" id="q1" data-rec="office-hours"><label for="q1">Starting something new, or unsure it's worth building<span class="sig">→ stress-test demand before writing code</span></label></div>
+    <div class="qrow"><input type="checkbox" id="q2" data-rec="plan-eng-review,plan-ceo-review,plan-design-review"><label for="q2">About to implement a non-trivial plan or design<span class="sig">→ lock architecture / product / UX before coding</span></label></div>
+    <div class="qrow"><input type="checkbox" id="q3" data-rec="code-review,simplify"><label for="q3">Wrote non-trivial code this session<span class="sig">→ catch bugs + strip over-engineering</span></label></div>
+    <div class="qrow"><input type="checkbox" id="q4" data-rec="codex"><label for="q4">A decision feels risky or you want an adversarial check<span class="sig">→ independent second opinion</span></label></div>
+    <div class="qrow"><input type="checkbox" id="q5" data-rec="security-review"><label for="q5">Touched auth, secrets, user input, or anything shippable & sensitive<span class="sig">→ security pass before it lands</span></label></div>
+    <div class="qrow"><input type="checkbox" id="q6" data-rec="CALIBRATE"><label for="q6">Made a bet with an uncertain outcome (built X expecting Y)<span class="sig">→ log the prediction now so you can score it later</span></label></div>
+    <div class="qrow"><input type="checkbox" id="q7" data-rec="learn,ADHERENCE"><label for="q7">Learned something reusable, or want to grade the session vs your 4 rules<span class="sig">→ capture the lesson + adherence check</span></label></div>
+    <div class="qrow"><input type="checkbox" id="q8" data-rec="retro,session-report"><label for="q8">End of week / sprint<span class="sig">→ retrospective + usage report</span></label></div>
+    <div class="qrow"><input type="checkbox" id="q9" data-rec="consolidate-memory,claude-md-improver,claude-automation-recommender"><label for="q9">It's been a few weeks since you tuned the setup<span class="sig">→ distill memory, sharpen rules, audit automations</span></label></div>
+    <div id="out"><div class="empty">Nothing checked yet — your recommendations appear here.</div></div>
+  </div>
+
+  <h2>2 · The full playbook, by cadence</h2>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--warn)"></i> Passive (always on)</span>
+    <span><i class="dot" style="background:var(--good)"></i> Ready to run</span>
+    <span><i class="dot" style="background:var(--enable)"></i> Enable first</span>
+    <span><i class="dot" style="background:var(--build)"></i> Needs building</span>
+  </div>
+
+  <div class="grp" id="playbook"></div>
+
+  <h2>3 · Your usage snapshot <span style="font-weight:400;text-transform:none;letter-spacing:0">(local session-report, 2026-06-14)</span></h2>
+  <div class="snap">
+    <div class="stat"><b>~99%</b><span>of work on Opus (4-8 / 4-7). Sonnet & Haiku barely used.</span></div>
+    <div class="stat"><b>192/213</b><span>subagents were generic. Explore / Plan rarely used.</span></div>
+    <div class="stat"><b>office-hours ✓</b><span>strong product-discipline habit already.</span></div>
+    <div class="stat"><b>codex ✓</b><span>regular second-opinion habit already.</span></div>
+  </div>
+  <div class="edge"><b>Growth edge 1 — model routing.</b> Almost everything runs on Opus. Route mechanical work (search, boilerplate, renames) to Sonnet/Haiku; save Opus for judgment. Faster + cheaper, same quality.</div>
+  <div class="edge"><b>Growth edge 2 — specialise subagents.</b> 90% of your subagents are <code>general-purpose</code>. Use <code>Explore</code> for "where is X", <code>Plan</code> for design — sharper results, less context burn.</div>
+  <div class="edge"><b>Growth edge 3 — close the loop.</b> You plan well up front (office-hours, plan-reviews) but nothing scores the result afterward. The two BUILD items below are that missing back-half.</div>
+
+  <footer>
+    Self-contained reference. Edit <code>index.html</code> and push to update.<br>
+    Tags: <b style="color:var(--warn)">passive</b> = in CLAUDE.md, no command ·
+    <b style="color:var(--good)">ready</b> = invoke now ·
+    <b style="color:var(--enable)">enable</b> = install/register the skill ·
+    <b style="color:var(--build)">build</b> = small glue not yet written.
+  </footer>
+</div>
+
+<script>
+// Single source of truth for both the triage output and the playbook.
+const SKILLS = {
+  "karpathy+ponytail":{name:"4 rules + lazy-dev ladder",cmd:"(passive)",tag:"passive",cadence:"Every session",
+    when:"Always on via CLAUDE.md. Walk the YAGNI→stdlib→native→installed-dep→one-line ladder before writing code; mark shortcuts with // ponytail:."},
+  "office-hours":{name:"Office Hours",cmd:"/office-hours",tag:"ready",cadence:"Before building",
+    when:"New idea or unsure it's worth building. Six forcing questions on demand, wedge, observation. Run BEFORE any code."},
+  "plan-eng-review":{name:"Plan — Eng review",cmd:"/plan-eng-review",tag:"ready",cadence:"Before building",
+    when:"Lock architecture, data flow, edge cases, test coverage before implementing a non-trivial plan."},
+  "plan-ceo-review":{name:"Plan — CEO review",cmd:"/plan-ceo-review",tag:"ready",cadence:"Before building",
+    when:"Pressure-test the product/business case of a plan."},
+  "plan-design-review":{name:"Plan — Design review",cmd:"/plan-design-review",tag:"ready",cadence:"Before building",
+    when:"Pressure-test UX/design of a plan before build."},
+  "code-review":{name:"Code review",cmd:"/code-review",tag:"ready",cadence:"After coding",
+    when:"Review the diff for correctness bugs. Use after writing non-trivial code."},
+  "simplify":{name:"Simplify",cmd:"/simplify",tag:"ready",cadence:"After coding",
+    when:"Apply reuse/over-engineering cleanups to the diff. Quality only — pair with code-review for bugs."},
+  "codex":{name:"Codex second opinion",cmd:"/codex",tag:"ready",cadence:"On signal",
+    when:"Adversarial review or independent opinion on a risky decision or tricky diff."},
+  "security-review":{name:"Security review",cmd:"/security-review",tag:"ready",cadence:"On signal",
+    when:"Touched auth, secrets, user input, or anything sensitive heading to ship."},
+  "learn":{name:"Learn (capture lesson)",cmd:"/learn",tag:"ready",cadence:"Session close",
+    when:"Captured a reusable lesson across sessions. 'Didn't we fix this before?' lives here."},
+  "ADHERENCE":{name:"Rule-adherence check",cmd:"(build)",tag:"build",cadence:"Session close",
+    when:"BUILD: grade the session against the 4 CLAUDE.md rules — which followed/missed, with evidence. Glue over karpathy-guidelines + memory."},
+  "CALIBRATE":{name:"Calibration log",cmd:"(build)",tag:"build",cadence:"Session close",
+    when:"BUILD: log a bet (built X expecting Y, confidence Z); revisit when the outcome lands and score the gap. Copy the guidance-tracker shape. This is the founder-instinct trainer."},
+  "retro":{name:"Weekly retro",cmd:"/retro",tag:"ready",cadence:"Weekly",
+    when:"End of week/sprint. Commit history, work patterns, code-quality trends."},
+  "session-report":{name:"Session usage report",cmd:"(enable) session-report",tag:"enable",cadence:"Weekly",
+    when:"Local Paxel — tokens, subagents, skills, expensive prompts from your transcripts. Register the skill first; meanwhile I can run it manually."},
+  "consolidate-memory":{name:"Consolidate memory",cmd:"/anthropic-skills:consolidate-memory",tag:"ready",cadence:"Periodic",
+    when:"Every few weeks: merge duplicate memories, retire dated ones, prune the index."},
+  "claude-md-improver":{name:"CLAUDE.md improver",cmd:"(enable) claude-md-improver",tag:"enable",cadence:"Periodic",
+    when:"Audit & sharpen your CLAUDE.md against templates. Register the skill first."},
+  "claude-automation-recommender":{name:"Automation recommender",cmd:"(enable) claude-automation-recommender",tag:"enable",cadence:"Periodic",
+    when:"'Was there a better setup?' Recommends hooks/subagents/skills/MCP. Register first; meanwhile I can advise manually."}
+};
+const ORDER = ["Every session","Before building","After coding","On signal","Session close","Weekly","Periodic"];
+
+// Build playbook grouped by cadence
+const pb = document.getElementById('playbook');
+ORDER.forEach(cad=>{
+  const items = Object.entries(SKILLS).filter(([,s])=>s.cadence===cad);
+  if(!items.length) return;
+  const h = document.createElement('div');
+  h.innerHTML = `<h2 style="margin-top:22px">${cad}</h2>`;
+  pb.appendChild(h);
+  items.forEach(([,s])=>{
+    const c=document.createElement('div'); c.className='card';
+    c.innerHTML=`<h3>${s.name} <span class="tag t-${s.tag}">${s.tag}</span></h3>
+      <span class="cmd">${s.cmd}</span>
+      <div class="when">${s.when}</div>`;
+    pb.appendChild(c);
+  });
+});
+
+// Triage logic
+const out=document.getElementById('out');
+function refresh(){
+  const recs=new Set();
+  document.querySelectorAll('.qrow input:checked').forEach(i=>{
+    i.dataset.rec.split(',').forEach(r=>recs.add(r.trim()));
+  });
+  if(!recs.size){out.innerHTML='<div class="empty">Nothing checked yet — your recommendations appear here.</div>';return;}
+  let html='<div style="font-size:12.5px;color:var(--mut);margin-bottom:6px">Run these, in order:</div>';
+  ORDER.concat(["x"]).forEach(()=>{}); // keep order stable
+  [...recs].sort((a,b)=>{
+    const oa=ORDER.indexOf((SKILLS[a]||{}).cadence), ob=ORDER.indexOf((SKILLS[b]||{}).cadence);
+    return oa-ob;
+  }).forEach(r=>{
+    const s=SKILLS[r]; if(!s)return;
+    html+=`<span class="pill">${s.name} <code>${s.cmd}</code></span>`;
+  });
+  out.innerHTML=html;
+}
+document.querySelectorAll('.qrow input').forEach(i=>i.addEventListener('change',refresh));
+</script>
+</body>
+</html>
