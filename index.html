@@ -109,7 +109,7 @@
   </div>
   <div class="edge"><b>Growth edge 1 — model routing.</b> Almost everything runs on Opus. Route mechanical work (search, boilerplate, renames) to Sonnet/Haiku; save Opus for judgment. Faster + cheaper, same quality.</div>
   <div class="edge"><b>Growth edge 2 — specialise subagents.</b> 90% of your subagents are <code>general-purpose</code>. Use <code>Explore</code> for "where is X", <code>Plan</code> for design — sharper results, less context burn.</div>
-  <div class="edge"><b>Growth edge 3 — close the loop.</b> You plan well up front (office-hours, plan-reviews) but nothing scores the result afterward. The two BUILD items below are that missing back-half.</div>
+  <div class="edge"><b>Growth edge 3 — close the loop.</b> You plan well up front (office-hours, plan-reviews) but nothing scored the result afterward. Now <code>/adherence</code> grades the session vs your rules and <code>/calibrate</code> scores your bets — the missing back-half, now live.</div>
 
   <footer>
     Self-contained reference. Edit <code>index.html</code> and push to update.<br>
@@ -143,10 +143,10 @@ const SKILLS = {
     when:"Touched auth, secrets, user input, or anything sensitive heading to ship."},
   "learn":{name:"Learn (capture lesson)",cmd:"/learn",tag:"ready",cadence:"Session close",
     when:"Captured a reusable lesson across sessions. 'Didn't we fix this before?' lives here."},
-  "ADHERENCE":{name:"Rule-adherence check",cmd:"(build)",tag:"build",cadence:"Session close",
-    when:"BUILD: grade the session against the 4 CLAUDE.md rules — which followed/missed, with evidence. Glue over karpathy-guidelines + memory."},
-  "CALIBRATE":{name:"Calibration log",cmd:"(build)",tag:"build",cadence:"Session close",
-    when:"BUILD: log a bet (built X expecting Y, confidence Z); revisit when the outcome lands and score the gap. Copy the guidance-tracker shape. This is the founder-instinct trainer."},
+  "ADHERENCE":{name:"Rule-adherence check",cmd:"/adherence",tag:"ready",cadence:"Session close",
+    when:"Grade the session against the 4 CLAUDE.md rules — which followed/partial/missed, with evidence, plus the one biggest miss. Offers to save a durable lesson to memory."},
+  "CALIBRATE":{name:"Calibration log",cmd:"/calibrate",tag:"ready",cadence:"Session close",
+    when:"Log a bet (built X expecting Y, confidence Z) now; 'review my bets' later to score confidence vs reality (Brier) and flag over/under-confidence. The founder-instinct trainer. → ~/.claude/calibration.md"},
   "retro":{name:"Weekly retro",cmd:"/retro",tag:"ready",cadence:"Weekly",
     when:"End of week/sprint. Commit history, work patterns, code-quality trends."},
   "session-report":{name:"Session usage report",cmd:"(enable) session-report",tag:"enable",cadence:"Weekly",
